@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16d0ec6f21eae6c46a957839d715770e, type: 3}
+  m_Name: StaticSlime
+  m_EditorClassIdentifier: 
+  unitType: 1
+  _stats:
+    maxHealth: 30
+    collisionDamage: 1
+  prefab: {fileID: 3059305223530154211, guid: f0f596f4216a44e42ad5cbc20a303c36, type: 3}
+  enemyType: 15
+  playerLayer:
+    serializedVersion: 2
+    m_Bits: 1280
+  controller: {fileID: 22100000, guid: 27132e8600a63f04fa7adb4764fe86a1, type: 2}
+  impactPrefabs:
+  - {fileID: 4075565589007400953, guid: 27c8fb768e30f88459024788dbe88bec, type: 3}
+  - {fileID: 5013566882751098580, guid: 591adcf3a48c5cb43a2e815a0fb25e68, type: 3}
+  _advancedStats:
+    chaseSpeed: 150
+    patrolSpeed: 150
+    nextWayPointDist: 1
+    hasAttacks: 0
+    attackDamage: 35
+    weaponAttackRange: 1
+    attackDistance: 1
+    attackRate: 1
+    isBouncable: 1
+    bounceDamage: 30
+    isStatic: 1
+    canFly: 0
+    jumpForce: 300

@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16d0ec6f21eae6c46a957839d715770e, type: 3}
+  m_Name: Crossbow
+  m_EditorClassIdentifier: 
+  unitType: 1
+  stats:
+    maxHealth: 250
+    collisionDamage: 0
+  prefab: {fileID: 0}
+  enemyType: 11
+  playerLayer:
+    serializedVersion: 2
+    m_Bits: 256
+  controller: {fileID: 22100000, guid: 8ee586672ecf4304aaefbfcd5ffa8be6, type: 2}
+  impactPrefabs:
+  - {fileID: 4075565589007400953, guid: 27c8fb768e30f88459024788dbe88bec, type: 3}
+  - {fileID: 5013566882751098580, guid: 591adcf3a48c5cb43a2e815a0fb25e68, type: 3}
+  advancedStatistics:
+    chaseSpeed: 0
+    patrolSpeed: 0
+    nextWayPointDist: 0
+    hasAttacks: 1
+    attackDamage: 25
+    weaponAttackRange: 25
+    attackDistance: 25
+    attackRate: 1.5
+    isBouncable: 0
+    bounceDamage: 0
+    isStatic: 1
+    canFly: 0
+    jumpForce: 0

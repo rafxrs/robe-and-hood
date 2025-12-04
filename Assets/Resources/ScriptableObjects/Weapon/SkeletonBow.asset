@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a4d1d24670dce54692ce4766d995154, type: 3}
+  m_Name: SkeletonBow
+  m_EditorClassIdentifier: 
+  attackDamage: 20
+  attackRate: 2
+  attackRange: 20
+  controller: {fileID: 0}
+  weaponPrefab:
+  - {fileID: 8471060817225452035, guid: 15aa1e6eaccafce48bb41da02f83fedf, type: 3}
+  launchForce: 20
+  launchArcHeight: 0.4
+  launchDuration: 0.5

@@ -1,0 +1,159 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8825185116037663427
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3596390498944819130}
+  - component: {fileID: 228448146654480024}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3596390498944819130
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8825185116037663427}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 25.997313, y: 1.9043092, z: 0.10934069}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &228448146654480024
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8825185116037663427}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0eca6b6ba7f996e478fe16fe29155307, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sounds:
+  - name: Roll
+    clip: {fileID: 8300000, guid: beeec43c7d297ae449d49234036ce6cb, type: 3}
+    volume: 0.6
+    volumeVariance: 0.1
+    pitch: 1
+    pitchVariance: 0.305
+    loop: 0
+    source: {fileID: 0}
+  - name: SwordAttack
+    clip: {fileID: 8300000, guid: ee152e4cb0dce374198ab3db5ffdd415, type: 3}
+    volume: 0.6
+    volumeVariance: 0.1
+    pitch: 1
+    pitchVariance: 0.338
+    loop: 0
+    source: {fileID: 0}
+  - name: SlimeDeath
+    clip: {fileID: 8300000, guid: 6e534afdb06b07a4ebec3ca025e72aea, type: 3}
+    volume: 0.6
+    volumeVariance: 0.1
+    pitch: 1
+    pitchVariance: 0.219
+    loop: 0
+    source: {fileID: 0}
+  - name: Equip
+    clip: {fileID: 8300000, guid: e285a8193b8cf76499eeb22bf02f4f4e, type: 3}
+    volume: 0.6
+    volumeVariance: 0.1
+    pitch: 1
+    pitchVariance: 0.259
+    loop: 0
+    source: {fileID: 0}
+  - name: Steps
+    clip: {fileID: 8300000, guid: 604a33bbba4ae584e89c068be5b8bfcf, type: 3}
+    volume: 0.775
+    volumeVariance: 0.292
+    pitch: 1
+    pitchVariance: 0.358
+    loop: 0
+    source: {fileID: 0}
+  - name: Level Complete
+    clip: {fileID: 8300000, guid: 7e772e3498b0c2a41a3ff5acc386d244, type: 3}
+    volume: 0.709
+    volumeVariance: 0
+    pitch: 1
+    pitchVariance: 0
+    loop: 0
+    source: {fileID: 0}
+  - name: Jump
+    clip: {fileID: 8300000, guid: c7acb0f8922b66444ba6a6c0f867c8d7, type: 3}
+    volume: 0.398
+    volumeVariance: 0.1
+    pitch: 1
+    pitchVariance: 0.311
+    loop: 0
+    source: {fileID: 0}
+  - name: Bow Load
+    clip: {fileID: 8300000, guid: 0e8ab0a505333f646b22e1ef1bad1d60, type: 3}
+    volume: 0.75
+    volumeVariance: 0
+    pitch: 1
+    pitchVariance: 0.2
+    loop: 0
+    source: {fileID: 0}
+  - name: Bow Release
+    clip: {fileID: 8300000, guid: 0c78cafff106384449ea815eac987598, type: 3}
+    volume: 0.5
+    volumeVariance: 0
+    pitch: 1
+    pitchVariance: 0.2
+    loop: 0
+    source: {fileID: 0}
+  - name: Arrow
+    clip: {fileID: 8300000, guid: 9ce687ca639a81745b8230c02ab84c1c, type: 3}
+    volume: 0.85
+    volumeVariance: 0
+    pitch: 1
+    pitchVariance: 0.2
+    loop: 0
+    source: {fileID: 0}
+  - name: Arrow Impact
+    clip: {fileID: 8300000, guid: 0745cae9cf277fb49a20ad53a2fbaaf1, type: 3}
+    volume: 0.5
+    volumeVariance: 0
+    pitch: 1
+    pitchVariance: 0.3
+    loop: 0
+    source: {fileID: 0}
+  - name: Ladder
+    clip: {fileID: 8300000, guid: 249364048832f7c4e94ac11654743a88, type: 3}
+    volume: 0.4
+    volumeVariance: 0.1
+    pitch: 1
+    pitchVariance: 0.15
+    loop: 0
+    source: {fileID: 0}
+  - name: Spear
+    clip: {fileID: 8300000, guid: 7d931e0aa8aafd546ae8097ee9f23e13, type: 3}
+    volume: 0.4
+    volumeVariance: 0.1
+    pitch: 1
+    pitchVariance: 0.15
+    loop: 0
+    source: {fileID: 0}
+  - name: Throw Spear
+    clip: {fileID: 8300000, guid: 9ce687ca639a81745b8230c02ab84c1c, type: 3}
+    volume: 1
+    volumeVariance: 0
+    pitch: 1
+    pitchVariance: 0.1
+    loop: 0
+    source: {fileID: 0}
