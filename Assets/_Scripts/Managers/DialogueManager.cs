@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace _Scripts.Managers
@@ -13,13 +14,45 @@ namespace _Scripts.Managers
         public Text dialogueText;
         public Animator animator;
         private GameObject _doActionOn;
-    
+
 
         [SerializeField] bool inDialogue;
 
         Queue<string> _sentences;
 
         private static readonly int IsOpen = Animator.StringToHash("isOpen");
+
+        //-------------------------------------------------------------------------------------------//
+        // INPUT SYSTEM ACTION
+        // Advance - Space (advances to the next sentence)
+        //-------------------------------------------------------------------------------------------//
+        private InputAction _advanceAction;
+        private bool _advanceQueued;
+
+        private void Awake()
+        {
+            _advanceAction = new InputAction("Advance", InputActionType.Button);
+            _advanceAction.AddBinding("<Keyboard>/space");
+        }
+
+        private void OnEnable()
+        {
+            _advanceAction.performed += OnAdvancePerformed;
+            _advanceAction.Enable();
+        }
+
+        private void OnDisable()
+        {
+            _advanceAction.performed -= OnAdvancePerformed;
+            _advanceAction.Disable();
+        }
+
+        private void OnDestroy()
+        {
+            _advanceAction?.Dispose();
+        }
+
+        private void OnAdvancePerformed(InputAction.CallbackContext ctx) => _advanceQueued = true;
 
         // Start is called before the first frame update
         void Start()
@@ -29,20 +62,25 @@ namespace _Scripts.Managers
 
         void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Space) && inDialogue)
+            // Snapshot and immediately clear the queued press so it's only ever consumed on the
+            // exact frame it happened - matches the old Input.GetKeyDown one-frame-pulse behaviour.
+            bool advancePressed = _advanceQueued;
+            _advanceQueued = false;
+
+            if (advancePressed && inDialogue)
             {
                 DisplayNextSentence();
             }
         }
 
         public void StartDialogue(Dialogue dialogue, GameObject doActionOn)
-    
+
         {
             inDialogue = true;
             animator.SetBool(IsOpen, true);
             nameText.text = dialogue.name;
             _doActionOn = doActionOn;
-            Debug.Log("Starting conversation with "+dialogue.name);
+            Debug.Log("Starting conversation with " + dialogue.name);
 
             _sentences.Clear();
 
@@ -59,8 +97,8 @@ namespace _Scripts.Managers
             {
                 EndDialogue();
             }
-            
-            else 
+
+            else
             {
                 if (_sentences != null)
                 {
@@ -75,7 +113,7 @@ namespace _Scripts.Managers
         {
             if (sentence == null) throw new ArgumentNullException(nameof(sentence));
             dialogueText.text = "";
-            foreach(var letter in sentence.ToCharArray())
+            foreach (var letter in sentence.ToCharArray())
             {
                 dialogueText.text += letter;
                 yield return null;
@@ -94,6 +132,6 @@ namespace _Scripts.Managers
             FindObjectOfType<GameManager>().EnablePlayerControl();
         }
 
-    
+
     }
 }

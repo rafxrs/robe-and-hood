@@ -1,12 +1,17 @@
 using _Scripts.Managers;
 using _Scripts.Scriptables;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 
 namespace _Scripts.Units.Player
 {
     /// <summary>
     /// This class is the main class for any attacking related code for the player. It deals with input and sets the correct weapons on the animator
+    ///
+    /// Input System bindings (see Awake):
+    ///   PrimaryAttack   - X / left mouse button / gamepad west button
+    ///   SecondaryAttack - Left Shift / right mouse button / gamepad right trigger
     /// </summary>
     public class PlayerCombat : MonoBehaviour
     {
@@ -43,6 +48,65 @@ namespace _Scripts.Units.Player
         private bool _shotQueued;
 
         // -------------------------------------------------------------------------------------------------------------------------- //
+        // INPUT SYSTEM ACTIONS
+        // -------------------------------------------------------------------------------------------------------------------------- //
+        private InputAction _primaryAttackAction;
+        private InputAction _secondaryAttackAction;
+
+        // One-frame latches, mirroring the old Input.GetKeyDown/GetMouseButtonDown pulse semantics
+        private bool _primaryAttackQueued;
+        private bool _secondaryAttackQueued;
+
+        private void Awake()
+        {
+            // PrimaryAttack - X / left mouse button / gamepad west button
+            _primaryAttackAction = new InputAction("PrimaryAttack", InputActionType.Button);
+            _primaryAttackAction.AddBinding("<Keyboard>/x");
+            _primaryAttackAction.AddBinding("<Mouse>/leftButton");
+            _primaryAttackAction.AddBinding("<Gamepad>/buttonWest");
+
+            // SecondaryAttack - Left Shift / right mouse button / gamepad right trigger
+            _secondaryAttackAction = new InputAction("SecondaryAttack", InputActionType.Button);
+            _secondaryAttackAction.AddBinding("<Keyboard>/leftShift");
+            _secondaryAttackAction.AddBinding("<Mouse>/rightButton");
+            _secondaryAttackAction.AddBinding("<Gamepad>/rightTrigger");
+        }
+
+        private void OnEnable()
+        {
+            _primaryAttackAction.performed += OnPrimaryAttackPerformed;
+            _primaryAttackAction.Enable();
+
+            _secondaryAttackAction.performed += OnSecondaryAttackPerformed;
+            _secondaryAttackAction.Enable();
+        }
+
+        private void OnDisable()
+        {
+            _primaryAttackAction.performed -= OnPrimaryAttackPerformed;
+            _primaryAttackAction.Disable();
+
+            _secondaryAttackAction.performed -= OnSecondaryAttackPerformed;
+            _secondaryAttackAction.Disable();
+        }
+
+        private void OnDestroy()
+        {
+            _primaryAttackAction?.Dispose();
+            _secondaryAttackAction?.Dispose();
+        }
+
+        private void OnPrimaryAttackPerformed(InputAction.CallbackContext ctx)
+        {
+            _primaryAttackQueued = true;
+        }
+
+        private void OnSecondaryAttackPerformed(InputAction.CallbackContext ctx)
+        {
+            _secondaryAttackQueued = true;
+        }
+
+        // -------------------------------------------------------------------------------------------------------------------------- //
         void Start()
         {
             _animator = GetComponent<Animator>(); NullCheck.CheckNull(_animator);
@@ -53,23 +117,33 @@ namespace _Scripts.Units.Player
         // Update is called once per frame
         void Update()
         {
-            if (weapon != null && GameManager.playerControl && Time.time > nextAttackTime && !_player.roll && !(_player.isClimbing && (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))))
+            // Snapshot and immediately clear the queued presses so each press is only ever
+            // consumed on the exact frame it happened - this matches the old GetKeyDown/
+            // GetMouseButtonDown one-frame-pulse behaviour, even if the outer gate below fails.
+            bool primaryPressed = _primaryAttackQueued;
+            bool secondaryPressed = _secondaryAttackQueued;
+            _primaryAttackQueued = false;
+            _secondaryAttackQueued = false;
+
+            bool climbingUp = _player.isClimbing && _player.MoveInput.y > 0.1f;
+
+            if (weapon != null && GameManager.playerControl && Time.time > nextAttackTime && !_player.roll && !climbingUp)
             {
                 // --- Bow Controls ---
                 if (weaponName == "Bow")
                 {
-                    // NORMAL: Space or LMB
-                    if (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0))
+                    // NORMAL: X / LMB
+                    if (primaryPressed)
                         QueueBowShot(fire: false);
 
-                    // FIRE: Shift or RMB
-                    else if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetMouseButtonDown(1))
+                    // FIRE: Left Shift / RMB
+                    else if (secondaryPressed)
                         QueueBowShot(fire: true);
                 }
 
 
                 // --- Spear Controls ---
-                else if ((Input.GetKeyDown(KeyCode.LeftShift) || Input.GetMouseButtonDown(1)) && weaponName == "Spear")
+                else if (secondaryPressed && weaponName == "Spear")
                 {
                     if (_player.currentMana >= _throwSpearManaCost)
                     {
@@ -86,7 +160,7 @@ namespace _Scripts.Units.Player
                 }
 
                 // --- Sword / Melee Controls ---
-                else if (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0))
+                else if (primaryPressed)
                 {
                     if (_combo < 2 && _player.currentMana >= 10f || (_combo >= 2 && _player.currentMana >= 50f))
                     {

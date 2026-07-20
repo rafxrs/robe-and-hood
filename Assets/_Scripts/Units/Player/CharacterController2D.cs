@@ -173,6 +173,13 @@ public class CharacterController2D : MonoBehaviour
 
 		return didJump;
 	}
+
+	/// <summary>
+	/// Call this from your input script the moment the jump button is released
+	/// (e.g. Input.GetButtonUp("Jump")). If the player is still rising, this cuts
+	/// their upward velocity short so a quick tap yields a lower jump, while
+	/// holding the button lets them reach the full mJumpForce height.
+	/// </summary>
 	public void EndJump()
 	{
 		if (!_isJumping || _jumpCutApplied)

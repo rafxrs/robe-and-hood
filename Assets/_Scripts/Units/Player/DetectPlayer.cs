@@ -1,6 +1,7 @@
 using _Scripts.Managers;
 using _Scripts.Units.Objects;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace _Scripts.Units.Player
 {
@@ -18,6 +19,37 @@ namespace _Scripts.Units.Player
         GameManager _gameManager;
         private static readonly int Open = Animator.StringToHash("Open");
 
+        //-------------------------------------------------------------------------------------------//
+        // INPUT SYSTEM ACTION
+        // Interact - Up Arrow (was E)
+        //-------------------------------------------------------------------------------------------//
+        private InputAction _interactAction;
+        private bool _interactQueued;
+
+        private void Awake()
+        {
+            _interactAction = new InputAction("Interact", InputActionType.Button);
+            _interactAction.AddBinding("<Keyboard>/upArrow");
+        }
+
+        private void OnEnable()
+        {
+            _interactAction.performed += OnInteractPerformed;
+            _interactAction.Enable();
+        }
+
+        private void OnDisable()
+        {
+            _interactAction.performed -= OnInteractPerformed;
+            _interactAction.Disable();
+        }
+
+        private void OnDestroy()
+        {
+            _interactAction?.Dispose();
+        }
+
+        private void OnInteractPerformed(InputAction.CallbackContext ctx) => _interactQueued = true;
 
         // Start is called before the first frame update
         void Start()
@@ -32,6 +64,11 @@ namespace _Scripts.Units.Player
         {
             // playerDetected = Physics2D.OverlapBox(areaPos.position, new Vector2(areaWidth, areaHeight),0,whatIsPlayer);
 
+            // Snapshot and immediately clear the queued press so it's only ever consumed on the
+            // exact frame it happened - matches the old Input.GetKeyDown one-frame-pulse behaviour.
+            bool interactPressed = _interactQueued;
+            _interactQueued = false;
+
             if (playerDetected)
             {
                 // do action
@@ -39,7 +76,7 @@ namespace _Scripts.Units.Player
                 {
                     case Action.Dialogue:
                         _gameManager.ShowEButton();
-                        if (Input.GetKeyDown(KeyCode.E))
+                        if (interactPressed)
                         {
                             if (doActionOn != null)
                             {
@@ -51,7 +88,7 @@ namespace _Scripts.Units.Player
                         break;
                     case Action.Door:
                         _gameManager.ShowEButton();
-                        if (Input.GetKeyDown(KeyCode.E))
+                        if (interactPressed)
                         {
                             Debug.Log("Opening the door");
                             _playerTransform.position = doActionOn.transform.position;
@@ -65,9 +102,9 @@ namespace _Scripts.Units.Player
                         _gameManager.ShowEButton();
                         // highlight specific weapon
                         doActionOn.SetActive(true);
-                        if (Input.GetKeyDown(KeyCode.E))
+                        if (interactPressed)
                         {
-                            int num=0;
+                            int num = 0;
                             switch (this.name)
                             {
                                 case "Spear":
@@ -91,10 +128,10 @@ namespace _Scripts.Units.Player
                         break;
                     case Action.EndOfLevel:
                         _gameManager.ShowEButton();
-                        if (Input.GetKeyDown(KeyCode.E))
+                        if (interactPressed)
                         {
                             Debug.Log("Finishing level");
-                            _gameManager.LevelComplete(); 
+                            _gameManager.LevelComplete();
                             Destroy(this.gameObject);
                         }
                         break;
@@ -102,13 +139,13 @@ namespace _Scripts.Units.Player
                         _gameManager.ShowEButton();
                         // if key, unlock chest;
                         // if no key, show missing key
-                        if (Input.GetKeyDown(KeyCode.E))
+                        if (interactPressed)
                         {
                             bool unlocked = _player.GetComponent<Player>().UnlockChest();
                             if (unlocked)
                             {
                                 Animator animator = GetComponent<Animator>();
-                                if (animator !=null)
+                                if (animator != null)
                                 {
                                     animator.SetTrigger(Open);
                                 }
@@ -116,18 +153,18 @@ namespace _Scripts.Units.Player
                                 _gameManager.HideEButton();
                                 this.enabled = false;
                             }
-                            else 
+                            else
                             {
                                 _player.transform.Find("MissingKey").gameObject.SetActive(true);
                                 Invoke(nameof(HideMissingKey), 1f);
                             }
-                        
+
                             _gameManager.HideEButton();
                         }
                         break;
                     case Action.Lever:
                         _gameManager.ShowEButton();
-                        if (Input.GetKeyDown(KeyCode.E))
+                        if (interactPressed)
                         {
                             Debug.Log("Switching lever");
                             GetComponent<Lever>().SwitchLeverState();
@@ -143,17 +180,17 @@ namespace _Scripts.Units.Player
                         break;
                     case Action.MovingPlatform:
                         _gameManager.ShowEButton();
-                        if (Input.GetKeyDown(KeyCode.E))
+                        if (interactPressed)
                         {
                             Debug.Log("Activating Platform");
                             doActionOn.GetComponent<MovingPlatform>().Activate();
                         }
                         break;
                 }
-            
+
             }
-        }   
-    
+        }
+
         [System.Serializable]
         public enum Action
         {
@@ -178,7 +215,7 @@ namespace _Scripts.Units.Player
         }
         void OnTriggerExit2D(Collider2D other)
         {
-        
+
             if (other.CompareTag("Player"))
             {
                 //Debug.Log("Player left the collider");

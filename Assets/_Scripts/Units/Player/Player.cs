@@ -3,6 +3,7 @@ using _Scripts.Managers;
 using _Scripts.Scriptables;
 using _Scripts.UI;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 
 namespace _Scripts.Units.Player
@@ -10,6 +11,13 @@ namespace _Scripts.Units.Player
     /// <summary>
     /// Main class for the player
     /// This class deals with health, movement, mana, coins and player related UI
+    ///
+    /// Input System bindings (see Awake):
+    ///   Move  - Arrow keys / gamepad left stick
+    ///   Jump  - Z / gamepad south button
+    ///   Roll  - C / gamepad east button
+    ///
+    /// Attack input (PrimaryAttack = X, SecondaryAttack = Left Shift) lives in PlayerCombat.
     /// </summary>
 
     //-------------------------------------------------------------------------------------------//
@@ -29,6 +37,11 @@ namespace _Scripts.Units.Player
         public bool isClimbing;
         public bool roll;
         public bool tookDamage;
+
+        /// <summary>Current raw Move action value, exposed so other scripts (e.g. PlayerCombat) can
+        /// read directional input without touching the legacy Input class.</summary>
+        public Vector2 MoveInput => _moveAction.ReadValue<Vector2>();
+
         //-------------------------------------------------------------------------------------------//
         // PRIVATE VARIABLES
         //-------------------------------------------------------------------------------------------//
@@ -40,6 +53,7 @@ namespace _Scripts.Units.Player
         Color _hurtColor;
         CapsuleCollider2D _hitbox;
         GameObject[] _impactPrefabs;
+        PlayerCombat _playerCombat;
 
         //-------------------------------------------------------------------------------------------//
         // PRIMITIVES
@@ -56,11 +70,94 @@ namespace _Scripts.Units.Player
         const float JumpBufferTime = 0.12f;
         float _jumpPressedTime = -1f;
 
+        // Roll input latch (mirrors the old GetButtonDown one-frame pulse)
+        bool _rollQueued;
+
         private static readonly int IsClimbing = Animator.StringToHash("isClimbing");
 
         private static readonly int Speed = Animator.StringToHash("Speed");
         //-------------------------------------------------------------------------------------------//
 
+        //-------------------------------------------------------------------------------------------//
+        // INPUT SYSTEM ACTIONS
+        //-------------------------------------------------------------------------------------------//
+        private InputAction _moveAction;
+        private InputAction _jumpAction;
+        private InputAction _rollAction;
+
+        private void Awake()
+        {
+            // Move - Arrow keys / gamepad left stick, returns a Vector2
+            _moveAction = new InputAction("Move", InputActionType.Value);
+            _moveAction.AddCompositeBinding("2DVector")
+                .With("Up", "<Keyboard>/upArrow")
+                .With("Down", "<Keyboard>/downArrow")
+                .With("Left", "<Keyboard>/leftArrow")
+                .With("Right", "<Keyboard>/rightArrow");
+            _moveAction.AddBinding("<Gamepad>/leftStick");
+
+            // Jump - Z / gamepad south button
+            _jumpAction = new InputAction("Jump", InputActionType.Button);
+            _jumpAction.AddBinding("<Keyboard>/z");
+            _jumpAction.AddBinding("<Gamepad>/buttonSouth");
+
+            // Roll - C / gamepad east button
+            _rollAction = new InputAction("Roll", InputActionType.Button);
+            _rollAction.AddBinding("<Keyboard>/c");
+            _rollAction.AddBinding("<Gamepad>/buttonEast");
+        }
+
+        private void OnEnable()
+        {
+            _moveAction.Enable();
+
+            _jumpAction.performed += OnJumpPerformed;
+            _jumpAction.canceled += OnJumpCanceled;
+            _jumpAction.Enable();
+
+            _rollAction.performed += OnRollPerformed;
+            _rollAction.Enable();
+        }
+
+        private void OnDisable()
+        {
+            _moveAction.Disable();
+
+            _jumpAction.performed -= OnJumpPerformed;
+            _jumpAction.canceled -= OnJumpCanceled;
+            _jumpAction.Disable();
+
+            _rollAction.performed -= OnRollPerformed;
+            _rollAction.Disable();
+        }
+
+        private void OnDestroy()
+        {
+            _moveAction?.Dispose();
+            _jumpAction?.Dispose();
+            _rollAction?.Dispose();
+        }
+
+        // ---- Input callbacks ----
+
+        private void OnJumpPerformed(InputAction.CallbackContext ctx)
+        {
+            if (!GameManager.playerControl || _isDead) return;
+            _jumpPressedTime = Time.time;
+        }
+
+        private void OnJumpCanceled(InputAction.CallbackContext ctx)
+        {
+            // Button released - cut the jump short if still rising (variable jump height)
+            if (controller != null)
+                controller.EndJump();
+        }
+
+        private void OnRollPerformed(InputAction.CallbackContext ctx)
+        {
+            if (!GameManager.playerControl || _isDead) return;
+            _rollQueued = true;
+        }
 
         //-------------------------------------------------------------------------------------------//
         // START
@@ -90,6 +187,7 @@ namespace _Scripts.Units.Player
             _rb = GetComponent<Rigidbody2D>();
             _spriteRenderer = GetComponent<SpriteRenderer>();
             _hitbox = GameObject.Find("PlayerHitbox").GetComponent<CapsuleCollider2D>();
+            _playerCombat = GetComponent<PlayerCombat>();
             if (_hitbox == null)
             {
                 Debug.LogError("Hitbox is null");
@@ -104,7 +202,9 @@ namespace _Scripts.Units.Player
         {
             if (GameManager.playerControl && !_isDead)
             {
-                _horizontalInput = Input.GetAxisRaw("Horizontal") * _playerScriptable.AdvancedStatistics.speed;
+                Vector2 moveValue = _moveAction.ReadValue<Vector2>();
+
+                _horizontalInput = moveValue.x * _playerScriptable.AdvancedStatistics.speed;
                 if (Mathf.Abs(_horizontalInput) > 0.001f && Time.time > nextStepsTime && IsGrounded())
                 {
                     nextStepsTime = Time.time + 0.3f;
@@ -118,21 +218,7 @@ namespace _Scripts.Units.Player
                     _animator.SetBool(IsClimbing, false);
                 }
 
-                // Buffer jump input instead of calling Jump() directly
-                if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W))
-                {
-                    _jumpPressedTime = Time.time;
-                }
-
-                // Variable jump height: releasing the jump key early cuts the jump short.
-                // This is safe to call even if the player isn't currently jumping - see
-                // CharacterController2D.EndJump(), which no-ops in that case.
-                if (Input.GetKeyUp(KeyCode.UpArrow) || Input.GetKeyUp(KeyCode.W))
-                {
-                    controller.EndJump();
-                }
-
-                if (isClimbing && (Time.time > _nextClimb) && (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W)))
+                if (isClimbing && (Time.time > _nextClimb) && moveValue.y > 0.1f)
                 {
                     if (Time.time > _nextLadderSound)
                     {
@@ -143,23 +229,26 @@ namespace _Scripts.Units.Player
                     {
 
                     }
-                    Climb();
+                    Climb(moveValue.y);
                     AudioManager.instance.StopPlaying("Steps");
                 }
-                // (Removed direct Jump() call on KeyDown)
 
-                // Roll
-                if (Input.GetButtonDown("Roll") && !roll && (currentMana >= _playerScriptable.AdvancedStatistics.rollManaCost) && IsGrounded() && !isClimbing && Mathf.Abs(_horizontalInput) > 0.01)
+                // Roll - consume the queued press exactly once, same semantics as the old GetButtonDown check
+                if (_rollQueued)
                 {
-                    //Debug.Log("Rolling");
-                    AudioManager.instance.StopPlaying("Steps");
-                    Roll();
+                    _rollQueued = false;
 
-                }
-                else if (Input.GetButtonDown("Roll") && (currentMana < _playerScriptable.AdvancedStatistics.rollManaCost) && IsGrounded() && !isClimbing && Mathf.Abs(_horizontalInput) > 0.01)
-                {
-                    transform.Find("MissingMana").gameObject.SetActive(true);
-                    Invoke("ResetMissingMana", 0.75f);
+                    if (!roll && (currentMana >= _playerScriptable.AdvancedStatistics.rollManaCost) && IsGrounded() && !isClimbing && Mathf.Abs(_horizontalInput) > 0.01)
+                    {
+                        //Debug.Log("Rolling");
+                        AudioManager.instance.StopPlaying("Steps");
+                        Roll();
+                    }
+                    else if ((currentMana < _playerScriptable.AdvancedStatistics.rollManaCost) && IsGrounded() && !isClimbing && Mathf.Abs(_horizontalInput) > 0.01)
+                    {
+                        transform.Find("MissingMana").gameObject.SetActive(true);
+                        Invoke("ResetMissingMana", 0.75f);
+                    }
                 }
             }
             else
@@ -231,10 +320,9 @@ namespace _Scripts.Units.Player
             manaBar.SetMana(currentMana);
             StartCoroutine(RollDownRoutine());
         }
-        public void Climb()
+        public void Climb(float verticalInput)
         {
             _animator.SetBool("isClimbing", true);
-            float verticalInput = Input.GetAxis("Vertical");
             Vector2 climbVelocity = new Vector2(_rb.linearVelocity.x, verticalInput * _playerScriptable.AdvancedStatistics.climbSpeed);
             _rb.linearVelocity = climbVelocity;
         }
@@ -365,7 +453,7 @@ namespace _Scripts.Units.Player
             }
             else
             {
-                currentMana += 0.1f;
+                currentMana += 0.2f;
                 manaBar.SetMana(currentMana);
             }
         }
@@ -377,7 +465,7 @@ namespace _Scripts.Units.Player
             _animator.SetBool("isJumping", false);
             _animator.SetBool("isClimbing", false);
             _animator.SetTrigger("Death");
-            GetComponent<PlayerCombat>().enabled = false;
+            if (_playerCombat != null) _playerCombat.enabled = false;
             GetComponent<CharacterController2D>().enabled = false;
             // GetComponent<BoxCollider2D>().enabled = false;
             // GetComponent<CircleCollider2D>().enabled = false;

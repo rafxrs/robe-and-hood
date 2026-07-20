@@ -1,6 +1,7 @@
 using System;
 using _Scripts.Units.Player;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 
@@ -28,10 +29,127 @@ namespace _Scripts.Managers
         Player _player;
 
         //-------------------------------------------------------------------------------------------//
-        /// <summary>
-        /// This is obviously an example and I have no idea what kind of game you're making.
-        /// You can use a similar manager for controlling your menu states or dynamic-cinematic, etc
-        /// </summary>
+        // INPUT SYSTEM ACTIONS
+        // Confirm  - Space (advance to next level once it's complete)
+        // Restart  - R
+        // Menu     - M
+        // Pause    - P / Escape (toggles pause)
+        // Weapon1/2/3 - 1 / 2 / 3 (weapon choice screen)
+        //-------------------------------------------------------------------------------------------//
+        private InputAction _confirmAction;
+        private InputAction _restartAction;
+        private InputAction _menuAction;
+        private InputAction _pauseAction;
+        private InputAction _weapon1Action;
+        private InputAction _weapon2Action;
+        private InputAction _weapon3Action;
+
+        // One-frame latches, mirroring the old Input.GetKeyDown pulse semantics
+        private bool _confirmQueued;
+        private bool _restartQueued;
+        private bool _menuQueued;
+        private bool _pauseQueued;
+        private bool _weapon1Queued;
+        private bool _weapon2Queued;
+        private bool _weapon3Queued;
+
+        // NOTE: assumes StaticInstance<T> declares "protected virtual void Awake()".
+        // If your base class differs, move this action-construction block into Start() instead.
+        protected override void Awake()
+        {
+            base.Awake();
+
+            _confirmAction = new InputAction("Confirm", InputActionType.Button);
+            _confirmAction.AddBinding("<Keyboard>/space");
+
+            _restartAction = new InputAction("Restart", InputActionType.Button);
+            _restartAction.AddBinding("<Keyboard>/r");
+
+            _menuAction = new InputAction("Menu", InputActionType.Button);
+            _menuAction.AddBinding("<Keyboard>/m");
+
+            _pauseAction = new InputAction("Pause", InputActionType.Button);
+            _pauseAction.AddBinding("<Keyboard>/p");
+            _pauseAction.AddBinding("<Keyboard>/escape");
+
+            _weapon1Action = new InputAction("Weapon1", InputActionType.Button);
+            _weapon1Action.AddBinding("<Keyboard>/1");
+
+            _weapon2Action = new InputAction("Weapon2", InputActionType.Button);
+            _weapon2Action.AddBinding("<Keyboard>/2");
+
+            _weapon3Action = new InputAction("Weapon3", InputActionType.Button);
+            _weapon3Action.AddBinding("<Keyboard>/3");
+        }
+
+        private void OnEnable()
+        {
+            _confirmAction.performed += OnConfirmPerformed;
+            _confirmAction.Enable();
+
+            _restartAction.performed += OnRestartPerformed;
+            _restartAction.Enable();
+
+            _menuAction.performed += OnMenuPerformed;
+            _menuAction.Enable();
+
+            _pauseAction.performed += OnPausePerformed;
+            _pauseAction.Enable();
+
+            _weapon1Action.performed += OnWeapon1Performed;
+            _weapon1Action.Enable();
+
+            _weapon2Action.performed += OnWeapon2Performed;
+            _weapon2Action.Enable();
+
+            _weapon3Action.performed += OnWeapon3Performed;
+            _weapon3Action.Enable();
+        }
+
+        private void OnDisable()
+        {
+            _confirmAction.performed -= OnConfirmPerformed;
+            _confirmAction.Disable();
+
+            _restartAction.performed -= OnRestartPerformed;
+            _restartAction.Disable();
+
+            _menuAction.performed -= OnMenuPerformed;
+            _menuAction.Disable();
+
+            _pauseAction.performed -= OnPausePerformed;
+            _pauseAction.Disable();
+
+            _weapon1Action.performed -= OnWeapon1Performed;
+            _weapon1Action.Disable();
+
+            _weapon2Action.performed -= OnWeapon2Performed;
+            _weapon2Action.Disable();
+
+            _weapon3Action.performed -= OnWeapon3Performed;
+            _weapon3Action.Disable();
+        }
+
+        private void OnDestroy()
+        {
+            _confirmAction?.Dispose();
+            _restartAction?.Dispose();
+            _menuAction?.Dispose();
+            _pauseAction?.Dispose();
+            _weapon1Action?.Dispose();
+            _weapon2Action?.Dispose();
+            _weapon3Action?.Dispose();
+        }
+
+        private void OnConfirmPerformed(InputAction.CallbackContext ctx) => _confirmQueued = true;
+        private void OnRestartPerformed(InputAction.CallbackContext ctx) => _restartQueued = true;
+        private void OnMenuPerformed(InputAction.CallbackContext ctx) => _menuQueued = true;
+        private void OnPausePerformed(InputAction.CallbackContext ctx) => _pauseQueued = true;
+        private void OnWeapon1Performed(InputAction.CallbackContext ctx) => _weapon1Queued = true;
+        private void OnWeapon2Performed(InputAction.CallbackContext ctx) => _weapon2Queued = true;
+        private void OnWeapon3Performed(InputAction.CallbackContext ctx) => _weapon3Queued = true;
+
+        //-------------------------------------------------------------------------------------------//
         [Serializable]
         public enum GameState
         {
@@ -52,24 +170,34 @@ namespace _Scripts.Managers
         // Update is called once per frame
         void Update()
         {
+            // Snapshot and immediately clear each queued press so it's only ever consumed on the
+            // exact frame it happened - matches the old GetKeyDown one-frame-pulse behaviour.
+            bool confirmPressed = _confirmQueued; _confirmQueued = false;
+            bool restartPressed = _restartQueued; _restartQueued = false;
+            bool menuPressed = _menuQueued; _menuQueued = false;
+            bool pausePressed = _pauseQueued; _pauseQueued = false;
+            bool weapon1Pressed = _weapon1Queued; _weapon1Queued = false;
+            bool weapon2Pressed = _weapon2Queued; _weapon2Queued = false;
+            bool weapon3Pressed = _weapon3Queued; _weapon3Queued = false;
+
             // if level complete and press space, go to next level
-            if (Input.GetKeyDown(KeyCode.Space) && levelComplete)
+            if (confirmPressed && levelComplete)
             {
                 LoadNextLevel();
             }
             //if r key is pressed restart scene
-            if (Input.GetKeyDown(KeyCode.R) && (isGameOver || isPaused))
+            if (restartPressed && (isGameOver || isPaused))
             {
                 Restart();
 
             }
             // m for menu
-            if (Input.GetKeyDown(KeyCode.M) && (isGameOver || isPaused))
+            if (menuPressed && (isGameOver || isPaused))
             {
                 SceneManager.LoadScene(0); // main menu
             }
-            // p for pause
-            if (Input.GetKeyDown(KeyCode.P) || Input.GetKeyDown(KeyCode.Escape))
+            // p / escape for pause
+            if (pausePressed)
             {
                 if (isPaused)
                 {
@@ -89,24 +217,19 @@ namespace _Scripts.Managers
                 }
 
             }
-            else if (isPaused && Input.GetKeyDown(KeyCode.Escape))
-            {
-                Application.Quit();
-                // SceneManager.LoadScene(0  );
-            }
             if (chooseWeaponPanel.activeSelf)
             {
-                if (Input.GetKeyDown(KeyCode.Alpha1))
+                if (weapon1Pressed)
                 {
                     _player.GetComponent<PlayerCombat>().ChooseWeapon(0);
                     Resume();
                 }
-                else if (Input.GetKeyDown(KeyCode.Alpha2))
+                else if (weapon2Pressed)
                 {
                     _player.GetComponent<PlayerCombat>().ChooseWeapon(1);
                     Resume();
                 }
-                else if (Input.GetKeyDown(KeyCode.Alpha3))
+                else if (weapon3Pressed)
                 {
                     _player.GetComponent<PlayerCombat>().ChooseWeapon(2);
                     Resume();

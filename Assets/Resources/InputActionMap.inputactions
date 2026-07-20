@@ -1,0 +1,13 @@
+{
+    "version": 1,
+    "name": "InputActionMap",
+    "maps": [
+        {
+            "name": "DefaultMap",
+            "id": "97241a2e-161a-43c3-8c99-7d4ca9efcd9c",
+            "actions": [],
+            "bindings": []
+        }
+    ],
+    "controlSchemes": []
+}
