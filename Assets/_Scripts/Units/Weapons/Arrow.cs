@@ -46,7 +46,7 @@ namespace _Scripts.Units.Weapons
 
             if (_isInAir)
             {
-                var velocity = _rb.velocity;
+                var velocity = _rb.linearVelocity;
                 float angle = Mathf.Atan2(velocity.y, velocity.x) * Mathf.Rad2Deg;
                 transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
             }
@@ -115,7 +115,7 @@ namespace _Scripts.Units.Weapons
         }
         void StopMotion()
         {
-            _rb.velocity = Vector2.zero;
+            _rb.linearVelocity = Vector2.zero;
             _rb.gravityScale = 0;
         }
 

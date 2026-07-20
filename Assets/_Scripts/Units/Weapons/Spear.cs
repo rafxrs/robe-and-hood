@@ -49,9 +49,9 @@ public class Spear : MonoBehaviour
     }
     void ChangeSpriteDirection()
     {
-        if (_rb.velocity != Vector2.zero)
+        if (_rb.linearVelocity != Vector2.zero)
         {
-            Quaternion toRotation = Quaternion.LookRotation(Vector3.forward, _rb.velocity);
+            Quaternion toRotation = Quaternion.LookRotation(Vector3.forward, _rb.linearVelocity);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed * Time.deltaTime);
         }
     }
@@ -110,7 +110,7 @@ public class Spear : MonoBehaviour
     }
     void StopMotion()
     {
-        _rb.velocity = Vector2.zero;
+        _rb.linearVelocity = Vector2.zero;
         _rb.gravityScale = 0;
     }
 

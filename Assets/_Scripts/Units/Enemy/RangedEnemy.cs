@@ -31,7 +31,7 @@ namespace _Scripts.Units.Enemy
             Vector2 initialVelocity = CalculateInitialVelocity(throwDirection, horizontalDistance, verticalDistance);
 
             // Apply the initial velocity to the arrow
-            arrowInstance.velocity = initialVelocity;
+            arrowInstance.linearVelocity = initialVelocity;
         }
 
         void ShootArrowOnPlayer()
@@ -45,7 +45,7 @@ namespace _Scripts.Units.Enemy
             Vector2 initialVelocity = CalculateInitialVelocity(launchDirection, horizontalDistance, verticalDistance);
 
             // Apply the initial velocity to the arrow
-            arrowInstance.velocity = initialVelocity;
+            arrowInstance.linearVelocity = initialVelocity;
         }
 
         private void ThrowSpear()
@@ -59,7 +59,7 @@ namespace _Scripts.Units.Enemy
             Vector2 initialVelocity = CalculateInitialVelocity(throwDirection, horizontalDistance, verticalDistance);
 
             // Apply the initial velocity to the spear
-            spearInstance.velocity = initialVelocity;
+            spearInstance.linearVelocity = initialVelocity;
         }
 
         private Vector2 CalculateInitialVelocity(Vector2 direction, float horizontalDistance, float verticalDistance)

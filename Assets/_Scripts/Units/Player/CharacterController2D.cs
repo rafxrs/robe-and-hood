@@ -15,6 +15,12 @@ public class CharacterController2D : MonoBehaviour
 	[FormerlySerializedAs("m_CeilingCheck")][SerializeField] private Transform mCeilingCheck;                           // A position marking where to check for ceilings
 	[FormerlySerializedAs("m_CrouchDisableCollider")][SerializeField] private Collider2D mCrouchDisableCollider;                // A collider that will be disabled when crouching
 
+	[Header("Variable Jump Height")]
+	[Tooltip("Multiplier applied to the player's upward velocity if the jump button is released early (0 = hard cut, 1 = no cut).")]
+	[Range(0f, 1f)][SerializeField] private float mJumpCutMultiplier = 0.5f;
+	[Tooltip("Minimum upward velocity guaranteed even on the shortest tap of the jump button.")]
+	[SerializeField] private float mMinJumpVelocity = 4f;
+
 	const float KGroundedRadius = .2f; // Radius of the overlap circle to determine if grounded
 	const float KCeilingRadius = .2f; // Radius of the overlap circle to determine if there is a ceiling
 	[FormerlySerializedAs("m_Grounded")] public bool mGrounded;            // Whether or not the player is grounded.
@@ -23,6 +29,10 @@ public class CharacterController2D : MonoBehaviour
 	// Coyote time
 	private const float CoyoteTime = 0.12f;
 	private float _lastGroundedTime = -1f;
+
+	// Variable jump height state
+	private bool _isJumping = false;      // true from the moment the jump is triggered until it's grounded again
+	private bool _jumpCutApplied = false; // ensures we only cut the jump once per jump
 
 	private Rigidbody2D _mRigidbody2D;
 	public bool _mFacingRight = true;  // For determining which way the player is currently facing.
@@ -65,7 +75,13 @@ public class CharacterController2D : MonoBehaviour
 			}
 		}
 
-		if (mGrounded) _lastGroundedTime = Time.time;
+		if (mGrounded)
+		{
+			_lastGroundedTime = Time.time;
+			// Reset jump state once we're back on the ground
+			_isJumping = false;
+			_jumpCutApplied = false;
+		}
 
 		// Expose unified grounded state
 		Grounded = mGrounded;
@@ -122,9 +138,9 @@ public class CharacterController2D : MonoBehaviour
 			}
 
 			// Move the character by finding the target velocity
-			Vector3 targetVelocity = new Vector2(move * 10f, _mRigidbody2D.velocity.y);
+			Vector3 targetVelocity = new Vector2(move * 10f, _mRigidbody2D.linearVelocity.y);
 			// And then smoothing it out and applying it to the character
-			_mRigidbody2D.velocity = Vector3.SmoothDamp(_mRigidbody2D.velocity, targetVelocity, ref _mVelocity, mMovementSmoothing);
+			_mRigidbody2D.linearVelocity = Vector3.SmoothDamp(_mRigidbody2D.linearVelocity, targetVelocity, ref _mVelocity, mMovementSmoothing);
 
 			// If the input is moving the player right and the player is facing left...
 			if (move > 0 && !_mFacingRight)
@@ -149,10 +165,32 @@ public class CharacterController2D : MonoBehaviour
 			// Mark as airborne until next ground check updates it again
 			mGrounded = false;
 			Grounded = mGrounded;
+
+			// Begin tracking this jump for variable height purposes
+			_isJumping = true;
+			_jumpCutApplied = false;
 		}
 
 		return didJump;
 	}
+	public void EndJump()
+	{
+		if (!_isJumping || _jumpCutApplied)
+			return;
+
+		Vector2 velocity = _mRigidbody2D.linearVelocity;
+
+		if (velocity.y > 0f)
+		{
+			float cutVelocity = velocity.y * mJumpCutMultiplier;
+			// Never cut below the guaranteed minimum jump velocity
+			velocity.y = Mathf.Max(cutVelocity, mMinJumpVelocity);
+			_mRigidbody2D.linearVelocity = velocity;
+		}
+
+		_jumpCutApplied = true;
+	}
+
 	private void Flip()
 	{
 		// Switch the way the player is labelled as facing.

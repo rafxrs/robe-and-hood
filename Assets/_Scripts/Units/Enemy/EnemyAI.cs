@@ -81,7 +81,7 @@ namespace _Scripts.Units.Enemy
             _distToPlayer = Mathf.Abs(transform.position.x - _playerTransform.position.x);
             if (Math.Abs(_playerTransform.position.x - transform.position.x) < tolerance)
             {
-                _rb.velocity = Vector2.zero;
+                _rb.linearVelocity = Vector2.zero;
             }
             if ((_playerTransform.position.x > leftBoundary.position.x) && (_playerTransform.position.x < rightBoundary.position.x)
                                                                         && (_playerTransform.position.y > bottomBoundary.position.y)
@@ -206,7 +206,7 @@ namespace _Scripts.Units.Enemy
         {
             if (_enemyScriptable.AdvancedStats.hasAttacks)
             {
-                _rb.velocity = Vector2.zero;
+                _rb.linearVelocity = Vector2.zero;
             }
             _dir *= -1f;
         }

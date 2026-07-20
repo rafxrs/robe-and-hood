@@ -265,7 +265,7 @@ namespace _Scripts.Units.Player
                 V
             );
 
-            spearInstance.velocity = initialVelocity;
+            spearInstance.linearVelocity = initialVelocity;
         }
         // -------------------------------------------------------------------------------------------------------------------------- //
         private void TryShootArrow(bool fireArrow)
@@ -302,7 +302,7 @@ namespace _Scripts.Units.Player
             float horizontalDistance = weapon.launchForce * weapon.launchDuration;
             float verticalDistance = weapon.launchArcHeight;
             Vector2 initialVelocity = CalculateInitialVelocity(throwDirection, horizontalDistance, verticalDistance);
-            arrowInstance.velocity = initialVelocity;
+            arrowInstance.linearVelocity = initialVelocity;
 
             Debug.Log($"{(fireArrow ? "🔥 Fire" : "🏹 Normal")} arrow shot! Mana used: {manaCost}");
         }
@@ -372,7 +372,7 @@ namespace _Scripts.Units.Player
             float H = weapon.launchForce * weapon.launchDuration;
             float V = weapon.launchArcHeight;
             Vector2 v0 = CalculateInitialVelocity(dir, H, V);
-            arrowInstance.velocity = v0;
+            arrowInstance.linearVelocity = v0;
 
             Debug.Log($"{(_queuedFireArrow ? "🔥 Fire" : "🏹 Normal")} arrow shot! Mana used: {_queuedManaCost}");
 

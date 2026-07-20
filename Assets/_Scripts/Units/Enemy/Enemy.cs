@@ -60,16 +60,16 @@ namespace _Scripts.Units.Enemy
             {
                 if (!_isAttacking && !enemyScriptable.AdvancedStats.isStatic)
                 {
-                    _animator.SetFloat(Speed, Mathf.Abs(_rb.velocity.x));
+                    _animator.SetFloat(Speed, Mathf.Abs(_rb.linearVelocity.x));
                     if (enemyScriptable.AdvancedStats.canFly)
                     {
-                        if (_rb.velocity.x > 0.01f)
+                        if (_rb.linearVelocity.x > 0.01f)
                         {
-                            _animator.SetFloat(Speed, Mathf.Abs(_rb.velocity.x));
+                            _animator.SetFloat(Speed, Mathf.Abs(_rb.linearVelocity.x));
                         }
-                        else if (_rb.velocity is { x: < 0.02f, y: > 0.01f })
+                        else if (_rb.linearVelocity is { x: < 0.02f, y: > 0.01f })
                         {
-                            _animator.SetFloat(Speed, Mathf.Abs(_rb.velocity.y));
+                            _animator.SetFloat(Speed, Mathf.Abs(_rb.linearVelocity.y));
                         }
 
                     }
@@ -134,7 +134,7 @@ namespace _Scripts.Units.Enemy
                 }
                 else
                 {
-                    if (enemyScriptable.enemyType != ScriptableEnemy.EnemyType.Slime) _rb.velocity = Vector3.zero;
+                    if (enemyScriptable.enemyType != ScriptableEnemy.EnemyType.Slime) _rb.linearVelocity = Vector3.zero;
                     _enemyAI.FlipPatrol();
                 }
             }
@@ -195,7 +195,7 @@ namespace _Scripts.Units.Enemy
             Debug.Log("enemy died");
 
             // die animation
-            _rb.velocity = Vector2.zero;
+            _rb.linearVelocity = Vector2.zero;
             _animator.SetTrigger(Death);
 
             if (linkedPlatform != null)
